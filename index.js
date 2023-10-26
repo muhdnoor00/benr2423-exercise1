@@ -4,9 +4,10 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json())
 
-app.post('/', (req, res) => { // req = request, res = response, send a GET request
-res.send('Hello World!')    // send Hello World as a response
-})
+app.post('/api/echo', (req, res) => {
+    console.log(req.body)
+    res.json(req.body)
+    })      
 
 /*app.post('/api/echo', (req, res) => {
 
