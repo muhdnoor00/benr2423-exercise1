@@ -6,17 +6,13 @@ app.use(express.json())
 
 app.post('/login', (req, res) => {
 
-    console.log(req.body.username,req.body.password)
+    console.log(req.body[0].id,req.body[0].username,req.body[0].password)
 
-    if(req.body.username != 'password' || req.body.password != 'username'){
+    if(req.body[0].username != 'Saya' || req.body[0].password != 'Suka'){
         return res.status(400).send('Cuba lagi')
     }
-    res.send('Login success')
-})      
-
-/*app.post('/api/echo', (req, res) => {
-
-}) */
+    res.send('Berjaya')
+})
 
 app.listen(port, () => {
 console.log(`Example app listening on port ${port}`)
