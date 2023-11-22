@@ -31,14 +31,48 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.patch('/profile', (req, res) => {
+  console.log(req.body)
+  client.db("Starting").collection("users").updateOne({
+    "username": req.body.username
+  }, {
+    $set: {"email": req.body.email}
+  }).then((result) => {
+    res.send('Berjaya')
+  })})
+
 app.post('/register', (req, res) => {
-  client.db("Starting").collection("users").insertOne({
-    "username":req.body.username,
-    "password":req.body.password
-  })
-  res.send('Berjaya')
-})
+  client.db("Starting").collection("users").find({
+    "username": { $eq: req.body.username }
+  }).toArray().then((result) => {
+    console.log(result)
+    if (result.length > 0) {
+      res.status(400).send('Username telah wujud')
+    }
+    else {
+        client.db("Starting").collection("users").insertOne({
+          "username": req.body.username,
+          "password": req.body.password
+        })
+        res.send('Berjaya')
+    }})})
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
+})
+
+/*
+  res.send('Berjaya')a
+})
+
+/*app.post('/register', (req, res) => {
+  client.db("Starting").collection("users").findOne({
+    if (req.body.username == 'Saya'){
+      res.send('Username telah wujud')
+    }
+    if (username =! req.body.password){
+      res.send('Password telah wujud')
+    }
   })
+  res.send('Cuba Cari')
+})*/
