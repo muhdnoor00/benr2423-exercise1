@@ -5,6 +5,7 @@ const uri = "mongodb+srv://b022210217:Meg04fEK7vmuXK0h@class0.qzwsbgr.mongodb.ne
 const express = require('express')
 const app = express()
 const port = process.env.PORT || 3000;
+const bcrypt = require('bcrypt');
 
 app.use(express.json())
 
@@ -31,7 +32,23 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.patch('/profile', (req, res) => {
+app.post('/login', (req, res) => {
+  const {username, password} = req.body;
+  console.log(username, password)
+
+  client.db("Starting").collection("users").findOne({"username": username}).then((user) => {
+      console.log(user)
+    })
+
+  if(bcrypt.compareSync(password, user.password)==true){
+    res.send('Berjaya')
+  }
+  else{
+    res.send('Cuba lagi')
+  }
+})
+
+/*app.patch('/profile', (req, res) => {
   console.log(req.body)
   client.db("Starting").collection("users").updateOne({
     "username": req.body.username
@@ -55,7 +72,7 @@ app.post('/register', (req, res) => {
           "password": req.body.password
         })
         res.send('Berjaya')
-    }})})
+    }})})*/
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
