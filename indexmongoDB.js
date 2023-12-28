@@ -38,7 +38,7 @@ app.post('/login', (req, res) => {
 
   client.db("Starting").collection("users").findOne({"username": username}).then((user) => {
       console.log(user)
-    })
+    
 
   if(bcrypt.compareSync(password, user.password)==true){
     res.send('Berjaya')
@@ -46,7 +46,7 @@ app.post('/login', (req, res) => {
   else{
     res.send('Cuba lagi')
   }
-})
+})})
 
 /*app.patch('/profile', (req, res) => {
   console.log(req.body)
