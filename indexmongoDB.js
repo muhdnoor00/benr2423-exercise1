@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 
 app.use(express.json())
+app.use(express.static('public'));
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
