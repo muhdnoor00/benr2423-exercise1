@@ -2,9 +2,9 @@
   "name": "benr2423-exercise1",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "x.js",
   "scripts": {
-    "start": "node indexmongoDB.js"
+    "start": "node x.js"
   },
   "author": "",
   "license": "ISC",
