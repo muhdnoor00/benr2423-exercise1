@@ -70,6 +70,7 @@ app.listen(port, () => {
   }
 })})
 
+//update email key into the collection
 app.patch('/profile', (req, res) => {
   console.log(req.body)
   client.db("Starting").collection("users").updateOne({
@@ -95,10 +96,6 @@ app.post('/register', (req, res) => {
         })
         res.send('Berjaya')
     }})})*/
-
-/*
-  res.send('Berjaya')a
-})
 
 /*app.post('/register', (req, res) => {
   client.db("Starting").collection("users").findOne({
