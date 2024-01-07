@@ -11,4 +11,4 @@ Try(no spaces)
 Entah
 
 - List  
-- [ ] Task    
+- [x] Task    
