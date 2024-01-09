@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Page</title>
+  <!-- Add your CSS styles here -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h2 {
+      color: #3366cc;
+    }
+
+    nav {
+      background-color: #f2f2f2;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    nav a {
+      margin-right: 20px;
+      text-decoration: none;
+      color: #333;
+    }
+
+    #inputFields {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Welcome, Student!</h2>
+
+  <nav>
+    <a href="#" onclick="showInputFields()">Record Attendance</a>
+    <a href="#" onclick="showAttendanceHistory()">View Attendance History</a>
+    <a href="#" onclick="showReport()">View Report</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </nav>
+
+  <div id="inputFields">
+    <h3>Record Attendance</h3>
+    <label for="student_id">Student ID:</label>
+    <input type="text" id="student_id" placeholder="Enter your student ID">
+
+    <label for="date">Date:</label>
+    <input type="date" id="date">
+
+    <label for="status">Status:</label>
+    <select id="status">
+      <option value="present">Present</option>
+      <option value="absent">Absent</option>
+      <!-- Add more options as needed -->
+    </select>
+
+    <button onclick="recordAttendance()">Submit Attendance</button>
+  </div>
+
+  <div id="attendanceHistory" style="display: none;">
+    <h3>Attendance History</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceTableBody">
+        <!-- Attendance history rows will be added here dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <div id="report" style="display: none;">
+    <h3>Attendance Report</h3>
+    <!-- Add content for the report section -->
+  </div>
+
+  <script>
+    function showInputFields() {
+      document.getElementById('inputFields').style.display = 'block';
+      document.getElementById('attendanceHistory').style.display = 'none';
+      document.getElementById('report').style.display = 'none';
+    }
+
+    function showAttendanceHistory() {
+      document.getElementById('inputFields').style.display = 'none';
+      document.getElementById('attendanceHistory').style.display = 'block';
+      document.getElementById('report').style.display = 'none';
+      // You can fetch and display attendance history dynamically here
+      // For now, let's assume attendance data is received as an array
+      const attendanceData = [
+        { date: '2024-01-15', status: 'present' },
+        { date: '2024-01-14', status: 'absent' },
+        // Add more attendance data as needed
+      ];
+      renderAttendanceTable(attendanceData);
+    }
+
+    function showReport() {
+      document.getElementById('inputFields').style.display = 'none';
+      document.getElementById('attendanceHistory').style.display = 'none';
+      document.getElementById('report').style.display = 'block';
+      // You can fetch and display report content dynamically here
+      // For now, let's assume a simple report content
+      document.getElementById('report').innerHTML = '<p>This is your attendance report content.</p>';
+    }
+
+    async function recordAttendance() {
+      const student_id = document.getElementById('student_id').value;
+      const date = document.getElementById('date').value;
+      const status = document.getElementById('status').value;
+
+      try {
+        const response = await fetch('/students/record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ student_id, date, status }),
+        });
+
+        if (response.ok) {
+          console.log('Attendance recorded successfully');
+          // If the attendance is recorded successfully, update attendance history
+          showAttendanceHistory();
+        } else {
+          console.error('Failed to record attendance');
+        }
+      } catch (error) {
+        console.error('Error recording attendance:', error);
+      }
+    }
+
+    function renderAttendanceTable(attendanceData) {
+      const tableBody = document.getElementById('attendanceTableBody');
+      // Clear existing rows
+      tableBody.innerHTML = '';
+      // Add new rows based on attendanceData
+      attendanceData.forEach((entry) => {
+        const row = tableBody.insertRow();
+        const dateCell = row.insertCell(0);
+        const statusCell = row.insertCell(1);
+        dateCell.textContent = entry.date;
+        statusCell.textContent = entry.status;
+      });
+    }
+
+    function logout() {
+      // You can add logic for logging out here
+      console.log('Logout clicked');
+    }
+  </script>
+
+</body>
+</html>

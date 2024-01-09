@@ -6,6 +6,7 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
 
 app.use(express.json())
 app.use(express.static('public'));
@@ -33,22 +34,26 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.post('/register', (req, res) => {
-  client.db("Starting").collection("users").find({
-    "username": { $eq: req.body.username }
-  }).toArray().then((result) => {
-    console.log(result)
-    if (result.length > 0) {
-      res.status(400).send('Username telah wujud')
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  console.log(username, password)
+
+  client.db("Starting").collection("users").findOne({ "username": username }).then((user) => {
+    console.log(user)
+
+    if (bcrypt.compareSync(password, user.password) == true) {
+      const token = jwt.sign({
+        username: user.username,
+        password: user.password
+      }
+        , 'secrets', { expiresIn: '1h' });
+      console.log(token)
     }
     else {
-        client.db("Starting").collection("users").insertOne({
-          "username": req.body.username,
-          "password": req.body.password,
-          
-        })
-        res.send('Berjaya')
-    }})})
+      res.send('Cuba lagi')
+    }
+  })
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
@@ -70,16 +75,25 @@ app.listen(port, () => {
   }
 })})
 
-//update email key into the collection
-app.patch('/profile', (req, res) => {
-  console.log(req.body)
-  client.db("Starting").collection("users").updateOne({
-    "username": req.body.username
-  }, {
-    $set: {"email": req.body.email}
-  }).then((result) => {
-    res.send('Berjaya')
-  })})
+app.post('/register', async (req, res) => {
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
+  client.db("Starting").collection("users").find({
+    "username": { $eq: req.body.username }
+  }).toArray().then((result) => {
+    console.log(result)
+    
+    if (result.length > 0) {
+      res.status(400).send('Username telah wujud')
+    }
+    else {
+      client.db("Starting").collection("users").insertOne({
+        "username": req.body.username,
+        "password": hashedPassword
+      })
+      res.send('Berjaya')
+    }
+  })
+})
 
 app.post('/register', (req, res) => {
   client.db("Starting").collection("users").find({
@@ -92,10 +106,24 @@ app.post('/register', (req, res) => {
     else {
         client.db("Starting").collection("users").insertOne({
           "username": req.body.username,
-          "password": req.body.password
+          "password": req.body.password,
+          
         })
         res.send('Berjaya')
-    }})})*/
+    }})})
+
+//update email key into the collection
+app.patch('/profile', (req, res) => {
+  console.log(req.body)
+  client.db("Starting").collection("users").updateOne({
+    "username": req.body.username
+  }, {
+    $set: {"email": req.body.email}
+  }).then((result) => {
+    res.send('Berjaya')
+  })})
+
+
 
 /*app.post('/register', (req, res) => {
   client.db("Starting").collection("users").findOne({

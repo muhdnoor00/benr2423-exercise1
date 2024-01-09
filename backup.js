@@ -3,6 +3,7 @@ const uri = "mongodb+srv://b022210217:Meg04fEK7vmuXK0h@class0.qzwsbgr.mongodb.ne
 
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
@@ -22,6 +23,12 @@ const client = new MongoClient(uri, {
     }
 });
 
+// Use bodyParser to parse form data
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Serve static files (e.g., HTML, CSS)
+app.use(express.static('public'));
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -35,6 +42,11 @@ async function run() {
     }
 }
 run().catch(console.dir);
+
+// Define a route for the login form
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
+});
 
 app.post('/login', async (req, res) => {
     console.log('Request received for /login');
@@ -55,6 +67,22 @@ app.post('/login', async (req, res) => {
             console.log('Login successful for user:', username);
             const token = await generateToken(user);
             res.send('Login Succesful, your token is \n' + token);
+            /*if (user.role == "Admin") {
+                const token = await generateToken(user);
+                res.send('Login Succesful, your token is \n' + token);
+                //return res.sendFile(__dirname + '/public/admin.html');
+            }
+            else if (user.role == "Student") {
+                const token = await generateToken(user);
+                res.send('Login Succesful, your token is \n' + token);
+                //return res.sendFile(__dirname + '/public/student.html');
+            }
+            else {
+                const token = await generateToken(user);
+                res.send('Login Succesful, your token is \n' + token);
+                //return res.sendFile(__dirname + '/public/faculty.html');
+            }*/
+
         } else {
             console.log('Incorrect password for user:', username);
             res.status(401).send('Invalid username or password');
