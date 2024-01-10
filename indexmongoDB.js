@@ -46,12 +46,25 @@ app.post('/login', (req, res) => {
         username: user.username,
         password: user.password
       }
-        , 'secrets', { expiresIn: '1h' });
+        , 'secrets', { expiresIn: '100s' });
       console.log(token)
+      return res.send('Berjaya');
     }
+
     else {
       res.send('Cuba lagi')
     }
+  })
+});
+
+app.get('/student', async (req, res) => {
+  console.log(req.headers.authorization)
+  const token = req.headers.authorization.split(' ')[1];
+  console.log('\n' + token);
+
+  jwt.verify(token, 'secrets', (err, decoded) => {
+    console.log(err);
+    console.log(decoded);
   })
 });
 
