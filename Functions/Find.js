@@ -1,6 +1,3 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://b022210217:Meg04fEK7vmuXK0h@class0.qzwsbgr.mongodb.net/?retryWrites=true&w=majority";
-
 //Find user function by username
 async function findUserByUsername(client, username) {
     try {

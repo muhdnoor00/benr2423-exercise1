@@ -1,6 +1,3 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://b022210217:Meg04fEK7vmuXK0h@class0.qzwsbgr.mongodb.net/?retryWrites=true&w=majority";
-
 //Create user student function
 async function createStudent(client, Username, Password, StudentId, Email, Phone, PA) {
     try {
@@ -40,29 +37,6 @@ async function createStaff(client, Username, Password, StaffId, Email, Phone) {
             staff_id: StaffId,
             email: Email,
             role: "Staff",
-            phone: Phone
-        };
-        // Insert the user object into the collection
-        await collection.insertOne(user);
-
-        console.log("User created successfully");
-    } catch (error) {
-        console.error("Error creating user:", error);
-    }
-}
-
-//Create user admin function
-async function createAdmin(client, Username, Password, Email, Phone) {
-    try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
-
-        // Create a user object
-        const user = {
-            username: Username,
-            password: Password,
-            email: Email,
-            role: "Admin",
             phone: Phone
         };
         // Insert the user object into the collection
@@ -149,7 +123,6 @@ async function createFaculty(client, Name, Code, Programs, Students, Session) {
 module.exports = {
     createStudent,
     createStaff,
-    createAdmin,
     createSubject,
     createPrograms,
     createFaculty

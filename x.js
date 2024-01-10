@@ -5,7 +5,7 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
+
 
 const create = require('./Functions/Create.js');
 const view = require('./Functions/View.js');
@@ -48,12 +48,11 @@ app.post('/login', async (req, res) => {
             console.log('User not found:', username);
             return res.status(401).send('Invalid username or password');
         }
-
+        
         const passwordMatch = await bcrypt.compare(password, user.password);
-
         if (passwordMatch) {
             console.log('Login successful for user:', username);
-            const token = await generateToken(user);
+            const token = await others.generateToken(user);
             res.send('Login Succesful, your token is \n' + token);
         } else {
             console.log('Incorrect password for user:', username);
@@ -66,12 +65,12 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.post('/admin/create-user/students', ADMIN, async (req, res) => {
+app.post('/admin/create-user/students', others.ADMIN, async (req, res) => {
     try {
         const { username, password, student_id, email, phone, PA } = req.body;
 
         // Check if the username already exists
-        const existingUser = await existing(username);
+        const existingUser = await others.existingusers(client, username);
 
         if (existingUser.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -90,12 +89,12 @@ app.post('/admin/create-user/students', ADMIN, async (req, res) => {
 }
 );
 
-app.post('/admin/create-user/staff', ADMIN, async (req, res) => {
+app.post('/admin/create-user/staff', others.ADMIN, async (req, res) => {
     try {
         const { username, password, staff_id, email, phone } = req.body;
 
         // Check if the username already exists
-        const existingUser = await existing(username);
+        const existingUser = await others.existingusers(username);
 
         if (existingUser.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -114,40 +113,12 @@ app.post('/admin/create-user/staff', ADMIN, async (req, res) => {
 }
 );
 
-app.post('/create-user/admin', async (req, res) => {
-    try {
-        const { username, password, email, phone } = req.body;
-
-        // Check if the username already exists
-        const existingUser = await existing(username);
-
-        if (existingUser.length > 0) {
-            // If a user with the same username already exists, return a 400 response
-            console.log(existingUser);
-            return res.status(400).send('Username already exists');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        // If the username is unique, proceed to create the new student
-        create.createAdmin(client, username, hashedPassword, email, phone);
-        return res.status(201).send("User created successfully");
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
-    }
-}
-);
-
-app.post('/faculty/create-subject', second, async (req, res) => {
+app.post('/faculty/create-subject', others.second, async (req, res) => {
     try {
         const { name, code, credit, faculty, program, session, students } = req.body;
 
         // Check if the username already exists
-        const existingSubject = await client
-            .db('Starting')
-            .collection('Subjects')
-            .find({ "code": { $eq: code } })
-            .toArray();
+        const existingSubject = await others.existingsubjects(client, code);
 
         if (existingSubject.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -164,16 +135,12 @@ app.post('/faculty/create-subject', second, async (req, res) => {
     }
 });
 
-app.post('/faculty/create-program', second, async (req, res) => {
+app.post('/faculty/create-program', others.second, async (req, res) => {
     try {
         const { name, code, faculty, subject, students, session } = req.body;
 
         // Check if the username already exists
-        const existingProgram = await client
-            .db('Starting')
-            .collection('Programs')
-            .find({ "code": { $eq: code } })
-            .toArray();
+        const existingProgram = await others.existingprograms(client, code);
 
         if (existingProgram.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -190,16 +157,12 @@ app.post('/faculty/create-program', second, async (req, res) => {
     }
 });
 
-app.post('/admin/create-faculty', ADMIN, async (req, res) => {
+app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
     try {
         const { name, code, program, students, session } = req.body;
 
         // Check if the username already exists
-        const existingFaculty = await client
-            .db('Starting')
-            .collection('Faculties')
-            .find({ "code": { $eq: code } })
-            .toArray();
+        const existingFaculty = await others.existingfaculties(client, code);
 
         if (existingFaculty.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -243,7 +206,7 @@ app.post('/view-details', async (req, res) => {
     }
 });
 
-app.post('/view-student-list', second, async (req, res) => {
+app.post('/view-student-list', others.second, async (req, res) => {
     try {
         const list = await view.viewStudentList(client);
         console.log(list);
@@ -255,7 +218,7 @@ app.post('/view-student-list', second, async (req, res) => {
     }
 });
 
-app.delete('/admin/delete-student/:student_id', ADMIN, async (req, res) => {
+app.delete('/admin/delete-student/:student_id', others.ADMIN, async (req, res) => {
     const studentID = req.params.student_id;
     try {
         const student = await find.findStudentById(studentID);
@@ -301,69 +264,3 @@ app.post('/report', async (req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
-
-async function existing(Username) {
-    return await client
-        .db('Starting')
-        .collection('users')
-        .find({ "username": { $eq: Username } })
-        .toArray();
-}
-
-async function generateToken(userData) {
-    const token = jwt.sign(
-        {
-            username: userData.username,
-            role: userData.role
-        },
-        'Holy',
-        { expiresIn: 600 }
-    );
-
-    console.log(token);
-    return token;
-}
-
-async function ADMIN(req, res, next) {
-    let header = req.headers.authorization;
-    if (!header) {
-        return res.status(401).send('Unauthorized');
-    }
-
-    let token = header.split(' ')[1];
-
-    jwt.verify(token, 'Holy', function (err, decoded) {
-        if (err) {
-            return res.status(401).send('Unauthorized');
-        }
-        else {
-            if (decoded.role != "Admin") {
-                return res.status(401).send('Unauthorized');
-            }
-            console.log(decoded.role)
-        }
-        next();
-    });
-}
-
-async function second(req, res, next) {
-    let header = req.headers.authorization;
-    if (!header) {
-        return res.status(401).send('Unauthorized');
-    }
-
-    let token = header.split(' ')[1];
-
-    jwt.verify(token, 'Holy', function (err, decoded) {
-        if (err) {
-            return res.status(401).send('Unauthorized');
-        }
-        else {
-            if (decoded.role != "Staff" || decoded.role != "Admin") {
-                return res.status(401).send('Unauthorized');
-            }
-            console.log(decoded.role)
-        }
-        next();
-    });
-}

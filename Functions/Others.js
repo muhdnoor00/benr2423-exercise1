@@ -1,5 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://b022210217:Meg04fEK7vmuXK0h@class0.qzwsbgr.mongodb.net/?retryWrites=true&w=majority";
+var jwt = require('jsonwebtoken');
 
 //Delete student function by Student ID
 async function deleteStudent(client, studentID) {
@@ -50,4 +49,104 @@ async function report(client, StudentId) {
     }
 }
 
-module.exports = { deleteStudent, recordattendance, report };
+async function existingusers(client, Username) {
+    return await client
+        .db('Starting')
+        .collection('users')
+        .find({ "username": { $eq: Username } })
+        .toArray();
+}
+
+async function existingsubjects(client, Code) {
+    return await client
+        .db('Starting')
+        .collection('Subjects')
+        .find({ "code": { $eq: Code } })
+        .toArray();
+}
+
+async function existingprograms(client, Code) {
+    return await client
+        .db('Starting')
+        .collection('Programs')
+        .find({ "code": { $eq: Code } })
+        .toArray();
+}
+
+async function existingfaculties(client, Code) {
+    return await client
+        .db('Starting')
+        .collection('Faculty')
+        .find({ "code": { $eq: Code } })
+        .toArray();
+}
+
+async function generateToken(userData) {
+    const token = jwt.sign(
+        {
+            username: userData.username,
+            role: userData.role
+        },
+        'Holy',
+        { expiresIn: 600 }
+    );
+
+    console.log(token);
+    return token;
+}
+
+async function ADMIN(req, res, next) {
+    let header = req.headers.authorization;
+    if (!header) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    let token = header.split(' ')[1];
+
+    jwt.verify(token, 'Holy', function (err, decoded) {
+        if (err) {
+            return res.status(401).send('Unauthorized');
+        }
+        else {
+            if (decoded.role != "Admin") {
+                return res.status(401).send('Unauthorized');
+            }
+            console.log(decoded.role)
+        }
+        next();
+    });
+}
+
+async function second(req, res, next) {
+    let header = req.headers.authorization;
+    if (!header) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    let token = header.split(' ')[1];
+
+    jwt.verify(token, 'Holy', function (err, decoded) {
+        if (err) {
+            return res.status(401).send('Unauthorized');
+        }
+        else {
+            if (decoded.role != "Staff" || decoded.role != "Admin") {
+                return res.status(401).send('Unauthorized');
+            }
+            console.log(decoded.role)
+        }
+        next();
+    });
+}
+
+module.exports = { 
+    deleteStudent, 
+    recordattendance, 
+    report, 
+    existingusers, 
+    existingsubjects,
+    existingprograms,
+    existingfaculties,
+    generateToken,
+    ADMIN,
+    second };
