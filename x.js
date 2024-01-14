@@ -6,7 +6,6 @@ const app = express()
 const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 
-
 const create = require('./Functions/Create.js');
 const view = require('./Functions/View.js');
 const find = require('./Functions/Find.js');
@@ -48,7 +47,7 @@ app.post('/login', async (req, res) => {
             console.log('User not found:', username);
             return res.status(401).send('Invalid username or password');
         }
-        
+
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (passwordMatch) {
             console.log('Login successful for user:', username);
@@ -94,7 +93,7 @@ app.post('/admin/create-user/staff', others.ADMIN, async (req, res) => {
         const { username, password, staff_id, email, phone } = req.body;
 
         // Check if the username already exists
-        const existingUser = await others.existingusers(username);
+        const existingUser = await others.existingusers(client, username);
 
         if (existingUser.length > 0) {
             // If a user with the same username already exists, return a 400 response
@@ -115,7 +114,7 @@ app.post('/admin/create-user/staff', others.ADMIN, async (req, res) => {
 
 app.post('/faculty/create-subject', others.second, async (req, res) => {
     try {
-        const { name, code, credit, faculty, program, session, students } = req.body;
+        const { name, code, credit, faculty, program, session } = req.body;
 
         // Check if the username already exists
         const existingSubject = await others.existingsubjects(client, code);
@@ -127,7 +126,7 @@ app.post('/faculty/create-subject', others.second, async (req, res) => {
         }
 
         // If the username is unique, proceed to create the new student
-        create.createSubject(client, name, code, credit, faculty, program, session, students);
+        create.createSubject(client, name, code, credit, faculty, program, session);
         return res.status(201).send("Subject created successfully");
     } catch (error) {
         console.error(error);
@@ -137,7 +136,7 @@ app.post('/faculty/create-subject', others.second, async (req, res) => {
 
 app.post('/faculty/create-program', others.second, async (req, res) => {
     try {
-        const { name, code, faculty, subject, students, session } = req.body;
+        const { name, code, faculty, subject, session } = req.body;
 
         // Check if the username already exists
         const existingProgram = await others.existingprograms(client, code);
@@ -149,7 +148,7 @@ app.post('/faculty/create-program', others.second, async (req, res) => {
         }
 
         // If the username is unique, proceed to create the new student
-        create.createPrograms(client, name, code, faculty, subject, students, session);
+        create.createPrograms(client, name, code, faculty, subject, session);
         return res.status(201).send("Program created successfully");
     } catch (error) {
         console.error(error);
@@ -159,7 +158,7 @@ app.post('/faculty/create-program', others.second, async (req, res) => {
 
 app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
     try {
-        const { name, code, program, students, session } = req.body;
+        const { name, code, program, session } = req.body;
 
         // Check if the username already exists
         const existingFaculty = await others.existingfaculties(client, code);
@@ -171,7 +170,7 @@ app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
         }
 
         // If the username is unique, proceed to create the new student
-        create.createFaculty(client, name, code, program, students, session);
+        create.createFaculty(client, name, code, program, session);
         return res.status(201).send("Faculty created successfully");
     } catch (error) {
         console.error(error);
@@ -179,11 +178,11 @@ app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
     }
 });
 
-app.post('/students/record', (req, res) => {
-    const { student_id, date, status } = req.body;
+app.post('/students/record/:student_id', others.student, (req, res) => {
+    const { date, status } = req.body;
 
     try {
-        others.recordattendance(client, student_id, date, status);
+        others.recordattendance(client, req.params.student_id, date, status);
         return res.status(201).send("Attendance recorded successfully");
     }
     catch (error) {
@@ -218,25 +217,6 @@ app.post('/view-student-list', others.second, async (req, res) => {
     }
 });
 
-app.delete('/admin/delete-student/:student_id', others.ADMIN, async (req, res) => {
-    const studentID = req.params.student_id;
-    try {
-        const student = await find.findStudentById(studentID);
-        if (!student) {
-            return res.status(404).send('Student not found');
-        }
-        const result = await others.deleteStudent(client, studentID);
-        if (result.deletedCount > 0) {
-            res.status(200).send('Student data has been deleted');
-        } else {
-            res.status(500).send('Failed to delete student data');
-        }
-    } catch (error) {
-        console.error("Error deleting student data:", error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
 app.post('/report', async (req, res) => {
     const { student_id } = req.body;
 
@@ -258,6 +238,38 @@ app.post('/report', async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).send("Internal Server Error");
+    }
+});
+
+app.patch('/faculty/update-student', others.second, async (req, res) => {
+    const { student_id, code } = req.body;
+
+    try {
+        others.addStudent(client, code, student_id);
+        return res.status(201).send("Student added successfully");
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).send("Internal Server Error");
+    }
+});
+
+app.delete('/admin/delete-student/:student_id', others.ADMIN, async (req, res) => {
+    const studentID = req.params.student_id;
+    try {
+        const student = await find.findStudentById(studentID);
+        if (!student) {
+            return res.status(404).send('Student not found');
+        }
+        const result = await others.deleteStudent(client, studentID);
+        if (result.deletedCount > 0) {
+            res.status(200).send('Student data has been deleted');
+        } else {
+            res.status(500).send('Failed to delete student data');
+        }
+    } catch (error) {
+        console.error("Error deleting student data:", error);
+        res.status(500).send('Internal Server Error');
     }
 });
 

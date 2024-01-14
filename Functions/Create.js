@@ -49,7 +49,7 @@ async function createStaff(client, Username, Password, StaffId, Email, Phone) {
 }
 
 //Create subject function
-async function createSubject(client, Name, Code, Credit, Faculty, Program, Session, Students) {
+async function createSubject(client, Name, Code, Credit, Faculty, Program, Session) {
     try {
         const database = client.db('Starting');
         const collection = database.collection('Subjects');
@@ -61,8 +61,7 @@ async function createSubject(client, Name, Code, Credit, Faculty, Program, Sessi
             credit: Credit,
             faculty: Faculty,
             program: Program,
-            session: Session,
-            student: Students
+            session: Session
         };
         // Insert the user object into the collection
         await collection.insertOne(subject);
@@ -74,7 +73,7 @@ async function createSubject(client, Name, Code, Credit, Faculty, Program, Sessi
 }
 
 //Create program function
-async function createPrograms(client, Name, Code, Faculty, Subjects, Students, Session) {
+async function createPrograms(client, Name, Code, Faculty, Subjects, Session) {
     try {
         const database = client.db('Starting');
         const collection = database.collection('Programs');
@@ -85,7 +84,6 @@ async function createPrograms(client, Name, Code, Faculty, Subjects, Students, S
             code: Code,
             faculty: Faculty,
             subject: Subjects,
-            students: Students,
             session: Session
         };
         // Insert the user object into the collection
@@ -98,7 +96,7 @@ async function createPrograms(client, Name, Code, Faculty, Subjects, Students, S
 }
 
 //Create faculty function
-async function createFaculty(client, Name, Code, Programs, Students, Session) {
+async function createFaculty(client, Name, Code, Programs, Session) {
     try {
         const database = client.db('Starting');
         const collection = database.collection('Faculties');
@@ -108,7 +106,6 @@ async function createFaculty(client, Name, Code, Programs, Students, Session) {
             name: Name,
             code: Code,
             program: Programs,
-            students: Students,
             session: Session
         };
         // Insert the user object into the collection
