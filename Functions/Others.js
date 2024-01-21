@@ -3,8 +3,8 @@ var jwt = require('jsonwebtoken');
 //Delete student function by Student ID
 async function deleteStudent(client, studentID) {
     try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
+        const database = client.db('AttendanceSystem');
+        const collection = database.collection('Users');
 
         const result = await collection.deleteOne({ student_id: studentID });
 
@@ -18,7 +18,7 @@ async function deleteStudent(client, studentID) {
 //Record attendance function by Student ID
 async function recordattendance(client, StudentId, Date, Status) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Attendance');
 
         // Create a user object
@@ -39,7 +39,7 @@ async function recordattendance(client, StudentId, Date, Status) {
 //Report attendance function by Student ID
 async function report(client, StudentId) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Attendance');
         const user = await collection.find({ student_id: StudentId }).toArray();
         return user;
@@ -51,15 +51,15 @@ async function report(client, StudentId) {
 
 async function existingusers(client, Username) {
     return await client
-        .db('Starting')
-        .collection('users')
+        .db('AttendanceSystem')
+        .collection('Users')
         .find({ "username": { $eq: Username } })
         .toArray();
 }
 
 async function existingsubjects(client, Code) {
     return await client
-        .db('Starting')
+        .db('AttendanceSystem')
         .collection('Subjects')
         .find({ "code": { $eq: Code } })
         .toArray();
@@ -67,7 +67,7 @@ async function existingsubjects(client, Code) {
 
 async function existingprograms(client, Code) {
     return await client
-        .db('Starting')
+        .db('AttendanceSystem')
         .collection('Programs')
         .find({ "code": { $eq: Code } })
         .toArray();
@@ -75,37 +75,27 @@ async function existingprograms(client, Code) {
 
 async function existingfaculties(client, Code) {
     return await client
-        .db('Starting')
+        .db('AttendanceSystem')
         .collection('Faculty')
         .find({ "code": { $eq: Code } })
         .toArray();
 }
 
-async function addStudent(client, code, studentID) {
+async function addStudent(client, code, studentIDs) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Subjects');
 
         const result = await collection.updateOne(
-            { code: { $eq: code } },
-            { $addToSet: { students: studentID } }
+            { code: code },
+            { $addToSet: { student_id: { $each: studentIDs } } }
         );
 
-        if (result.matchedCount === 0) {
-            // Subject with the given code not found
-            return { success: false, message: 'Subject not found' };
-        }
-
-        if (result.modifiedCount === 0) {
-            // No modifications made (studentID might already be in the list)
-            return { success: false, message: 'Student already added' };
-        }
-
-        // Successful operation
-        return { success: true, message: 'Student added successfully' };
+        const updatedDocument = await collection.findOne({ code });
+        console.log("Updated Document:", updatedDocument);
+        return result;
     } catch (error) {
-        console.error('Error adding student:', error);
-        return { success: false, message: 'Internal Server Error' };
+        console.error("Error adding students:", error);
     }
 }
 
@@ -123,7 +113,7 @@ async function generateToken(userData) {
     return token;
 }
 
-async function student(req, res, next) {
+async function STUDENT(req, res, next) {
     let header = req.headers.authorization;
     if (!header) {
         return res.status(401).send('Unauthorized');
@@ -137,6 +127,9 @@ async function student(req, res, next) {
         }
         else {
             console.log(decoded);
+            if (decoded.role != "Student") {
+                return res.status(401).send('Student only');
+            }
             if (decoded.studentID != req.params.student_id) {
                 console.log(decoded.studentID, req.params.student_id);
                 return res.status(401).send('Your own student ID only');
@@ -168,7 +161,7 @@ async function ADMIN(req, res, next) {
     });
 }
 
-async function second(req, res, next) {
+async function FACULTY(req, res, next) {
     let header = req.headers.authorization;
     if (!header) {
         return res.status(401).send('Unauthorized');
@@ -181,10 +174,34 @@ async function second(req, res, next) {
             return res.status(401).send('Unauthorized');
         }
         else {
-            if (decoded.role != "Staff" && decoded.role != "Admin") {
-                return res.status(401).send('Admin or Staff only');
+            console.log(decoded);
+            if (decoded.role != "staff") {
+                console.log(decoded.role);
+                return res.status(401).send('Faculty Level Only');
             }
-            console.log(decoded.role)
+        }
+        next();
+    });
+}
+
+async function FACULTYSTUDENT(req, res, next) {
+    let header = req.headers.authorization;
+    if (!header) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    let token = header.split(' ')[1];
+
+    jwt.verify(token, 'Holy', function (err, decoded) {
+        if (err) {
+            return res.status(401).send('Unauthorized');
+        }
+        else {
+            console.log(decoded);
+            if (decoded.role != "staff" && decoded.role != "Student") {
+                console.log(decoded.role);
+                return res.status(401).send('Faculty and Student Access Only');
+            }
         }
         next();
     });
@@ -200,7 +217,8 @@ module.exports = {
     existingfaculties,
     addStudent,
     generateToken,
-    student,
     ADMIN,
-    second
+    STUDENT,
+    FACULTY,
+    FACULTYSTUDENT
 };

@@ -1,8 +1,8 @@
 //Create user student function
 async function createStudent(client, Username, Password, StudentId, Email, Phone, PA) {
     try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
+        const database = client.db('AttendanceSystem');
+        const collection = database.collection('Users');
 
         // Create a user object
         const user = {
@@ -27,8 +27,8 @@ async function createStudent(client, Username, Password, StudentId, Email, Phone
 //Create user staff function
 async function createStaff(client, Username, Password, StaffId, Email, Phone) {
     try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
+        const database = client.db('AttendanceSystem');
+        const collection = database.collection('Users');
 
         // Create a user object
         const user = {
@@ -51,7 +51,7 @@ async function createStaff(client, Username, Password, StaffId, Email, Phone) {
 //Create subject function
 async function createSubject(client, Name, Code, Credit, Faculty, Program, Session) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Subjects');
 
         // Create a user object
@@ -73,9 +73,9 @@ async function createSubject(client, Name, Code, Credit, Faculty, Program, Sessi
 }
 
 //Create program function
-async function createPrograms(client, Name, Code, Faculty, Subjects, Session) {
+async function createPrograms(client, Name, Code, Faculty, Subjects, Session, Students) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Programs');
 
         // Create a user object
@@ -84,7 +84,8 @@ async function createPrograms(client, Name, Code, Faculty, Subjects, Session) {
             code: Code,
             faculty: Faculty,
             subject: Subjects,
-            session: Session
+            session: Session,
+            students: Students
         };
         // Insert the user object into the collection
         await collection.insertOne(program);
@@ -96,9 +97,9 @@ async function createPrograms(client, Name, Code, Faculty, Subjects, Session) {
 }
 
 //Create faculty function
-async function createFaculty(client, Name, Code, Programs, Session) {
+async function createFaculty(client, Name, Code, Programs, Session, Students) {
     try {
-        const database = client.db('Starting');
+        const database = client.db('AttendanceSystem');
         const collection = database.collection('Faculties');
 
         // Create a user object
@@ -106,7 +107,8 @@ async function createFaculty(client, Name, Code, Programs, Session) {
             name: Name,
             code: Code,
             program: Programs,
-            session: Session
+            session: Session,
+            students: Students
         };
         // Insert the user object into the collection
         await collection.insertOne(faculty);

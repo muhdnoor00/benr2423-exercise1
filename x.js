@@ -11,6 +11,7 @@ const view = require('./Functions/View.js');
 const find = require('./Functions/Find.js');
 const others = require('./Functions/Others.js');
 
+
 app.use(express.json())
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -92,7 +93,6 @@ app.post('/admin/create-user/staff', others.ADMIN, async (req, res) => {
     try {
         const { username, password, staff_id, email, phone } = req.body;
 
-        // Check if the username already exists
         const existingUser = await others.existingusers(client, username);
 
         if (existingUser.length > 0) {
@@ -102,30 +102,25 @@ app.post('/admin/create-user/staff', others.ADMIN, async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        // If the username is unique, proceed to create the new student
         create.createStaff(client, username, hashedPassword, staff_id, email, phone);
         return res.status(201).send("User created successfully");
     } catch (error) {
         console.error(error);
         return res.status(500).send("Internal Server Error");
     }
-}
-);
+});
 
-app.post('/faculty/create-subject', others.second, async (req, res) => {
+app.post('/faculty/create-subject', async (req, res) => {
     try {
         const { name, code, credit, faculty, program, session } = req.body;
 
-        // Check if the username already exists
         const existingSubject = await others.existingsubjects(client, code);
 
         if (existingSubject.length > 0) {
-            // If a user with the same username already exists, return a 400 response
             console.log(existingSubject);
             return res.status(400).send('Subject already exists');
         }
 
-        // If the username is unique, proceed to create the new student
         create.createSubject(client, name, code, credit, faculty, program, session);
         return res.status(201).send("Subject created successfully");
     } catch (error) {
@@ -134,21 +129,18 @@ app.post('/faculty/create-subject', others.second, async (req, res) => {
     }
 });
 
-app.post('/faculty/create-program', others.second, async (req, res) => {
+app.post('/faculty/create-program', async (req, res) => {
     try {
-        const { name, code, faculty, subject, session } = req.body;
+        const { name, code, faculty, subject, session, students } = req.body;
 
-        // Check if the username already exists
         const existingProgram = await others.existingprograms(client, code);
 
         if (existingProgram.length > 0) {
-            // If a user with the same username already exists, return a 400 response
             console.log(existingProgram);
             return res.status(400).send('Program already exists');
         }
 
-        // If the username is unique, proceed to create the new student
-        create.createPrograms(client, name, code, faculty, subject, session);
+        create.createPrograms(client, name, code, faculty, subject, session, students);
         return res.status(201).send("Program created successfully");
     } catch (error) {
         console.error(error);
@@ -156,21 +148,18 @@ app.post('/faculty/create-program', others.second, async (req, res) => {
     }
 });
 
-app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
+app.post('/admin/create-faculty', async (req, res) => {
     try {
-        const { name, code, program, session } = req.body;
+        const { name, code, program, session, students } = req.body;
 
-        // Check if the username already exists
         const existingFaculty = await others.existingfaculties(client, code);
 
         if (existingFaculty.length > 0) {
-            // If a user with the same username already exists, return a 400 response
             console.log(existingFaculty);
             return res.status(400).send('Faculty already exists');
         }
 
-        // If the username is unique, proceed to create the new student
-        create.createFaculty(client, name, code, program, session);
+        create.createFaculty(client, name, code, program, session, students);
         return res.status(201).send("Faculty created successfully");
     } catch (error) {
         console.error(error);
@@ -178,38 +167,34 @@ app.post('/admin/create-faculty', others.ADMIN, async (req, res) => {
     }
 });
 
-app.post('/students/record/:student_id', others.student, (req, res) => {
+app.post('/students/record/:student_id', others.STUDENT, (req, res) => {
     const { date, status } = req.body;
 
     try {
         others.recordattendance(client, req.params.student_id, date, status);
         return res.status(201).send("Attendance recorded successfully");
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
-    }
-}
-);
-
-app.post('/view-details', async (req, res) => {
-    const { student_id } = req.body;
-
-    try {
-        const details = await view.viewDetails(client, student_id);
-        console.log(details);
-        return res.status(201).send("Successful");
     } catch (error) {
         console.error(error);
         return res.status(500).send("Internal Server Error");
     }
 });
 
-app.post('/view-student-list', others.second, async (req, res) => {
+app.post('/view-details', async (req, res) => {
+    const { student_id } = req.body;
+
+    try {
+        const details = await view.viewDetails(client, student_id);
+        return res.status(201).json({ message: "View Details successful", details });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post('/view-student-list', async (req, res) => {
     try {
         const list = await view.viewStudentList(client);
-        console.log(list);
-        return res.status(201).send("View successfully completed");
+        return res.status(201).json({ message: "View Student List successful", list });
     }
     catch (error) {
         console.error(error);
@@ -241,11 +226,11 @@ app.post('/report', async (req, res) => {
     }
 });
 
-app.patch('/faculty/update-student', others.second, async (req, res) => {
+app.patch('/faculty/update-student', async (req, res) => {
     const { student_id, code } = req.body;
 
     try {
-        others.addStudent(client, code, student_id);
+        await others.addStudent(client, code, [student_id]);
         return res.status(201).send("Student added successfully");
     }
     catch (error) {

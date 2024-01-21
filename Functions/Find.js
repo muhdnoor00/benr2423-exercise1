@@ -1,8 +1,8 @@
 //Find user function by username
 async function findUserByUsername(client, username) {
     try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
+        const database = client.db('AttendanceSystem');
+        const collection = database.collection('Users');
 
         // Find the user by username
         const user = await collection.findOne({ username });
@@ -17,8 +17,8 @@ async function findUserByUsername(client, username) {
 //Find student function by Student ID
 async function findStudentById(client, StudentId) {
     try {
-        const database = client.db('Starting');
-        const collection = database.collection('users');
+        const database = client.db('AttendanceSystem');
+        const collection = database.collection('Users');
 
         // Find the user by username
         const user = await collection.findOne({ student_id: StudentId });
